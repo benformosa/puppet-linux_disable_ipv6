@@ -20,7 +20,7 @@ class linux_disable_ipv6 (
   case $facts['os']['family'] {
     'RedHat': {
       case $facts['os']['release']['major'] {
-        '7', '8': {
+        '7', '8', '9': {
           # Following the second method, using sysctl
 
           # Validation
@@ -33,6 +33,15 @@ class linux_disable_ipv6 (
           $bad_ifaces = $ifaces - $all_ifaces
           if $bad_ifaces != [] {
             fail("Specified interfaces do not exist on host: ${bad_ifaces}")
+          }
+
+          # Install the libtirpc package.
+          package {'libtirpc':
+            ensure => installed,
+            before => [
+                File_line['netconfig-udp6'],
+                File_line['netconfig-tcp6'],
+              ]
           }
 
           # Only runs after notify
@@ -104,7 +113,7 @@ class linux_disable_ipv6 (
 
         }
         default: {
-          fail("linux_disable_ipv6 supports RedHat like systems with major release of 7/8 and you have ${facts['os']['release']['full']}")
+          fail("linux_disable_ipv6 supports RedHat like systems with major release of 7/8/9 and you have ${facts['os']['release']['full']}")
         }
       }
     }
